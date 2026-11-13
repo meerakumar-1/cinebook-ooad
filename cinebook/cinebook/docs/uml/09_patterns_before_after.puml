@@ -122,10 +122,12 @@ interface BookingObserver {
 class EmailNotifier
 class SMSNotifier
 class AuditLogger
+class InAppNotifier
 BookingEventPublisher o-- "0..*" BookingObserver
 BookingObserver <|.. EmailNotifier
 BookingObserver <|.. SMSNotifier
 BookingObserver <|.. AuditLogger
+BookingObserver <|.. InAppNotifier
 BookingFacade --> BookingEventPublisher : notify()
 @enduml
 

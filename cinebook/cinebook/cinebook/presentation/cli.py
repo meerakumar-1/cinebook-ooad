@@ -48,7 +48,7 @@ def run_demo(facade):
     print("\n== Rohan books D1 with wallet, then cancels ==")
     b2 = facade.book_tickets(2, show.id, ["D1"], "WALLET", {"balance": 1000})
     print(f"  Booking #{b2.id} {b2.status.name}, total Rs.{b2.total_amount}")
-    b2 = facade.cancel_booking(b2.id)
+    b2 = facade.cancel_booking(b2.id, 2)
     print(f"  Booking #{b2.id} now {b2.status.name}")
 
     print("\n== Notifications (Observer) ==")
@@ -90,7 +90,7 @@ def interactive(facade):
             elif c == "5":
                 for b in facade.booking_history(uid):
                     print(f"  #{b.id} {b.show.movie.title} {[t.seat.label for t in b.tickets]} {b.status.name} Rs.{b.total_amount}")
-            elif c == "6": facade.cancel_booking(int(input("booking id: "))); print("  Cancelled")
+            elif c == "6": facade.cancel_booking(int(input("booking id: ")), uid); print("  Cancelled")
             elif c == "7": print(facade.generate_report(uid, input("revenue/occupancy: ")))
         except (CineBookError, ValueError, KeyError) as e:
             print(f"  ! {e}")

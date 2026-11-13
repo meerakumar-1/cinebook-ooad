@@ -101,7 +101,7 @@ class User:
     def __init__(self, name: str, email: str, id: int | None = None):
         if "@" not in email:
             raise ValidationError("Invalid email")
-        self.id, self.name, self._email = id, name, email
+        self.id, self.name, self._email = id, name, email.strip().lower()
 
     @property
     def email(self) -> str:

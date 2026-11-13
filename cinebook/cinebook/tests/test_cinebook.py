@@ -94,10 +94,10 @@ class TestBookingFlow(Base):
 
     def test_cancel_refunds_and_frees_seat(self):
         b = self.f.book_tickets(2, self.show.id, ["B1"], "UPI", self.upi)
-        self.f.cancel_booking(b.id)
+        self.f.cancel_booking(b.id, 2)
         self.assertEqual(self.f.bookings.payment_for(b.id).status, "REFUNDED")
         self.assertTrue(dict((l, free) for l, _, free in self.f.seat_map(self.show.id))["B1"])
-        with self.assertRaises(InvalidStateTransition): self.f.cancel_booking(b.id)
+        with self.assertRaises(InvalidStateTransition): self.f.cancel_booking(b.id, 2)
 
     def test_started_show_rejected(self):
         late = BookingFacade(self.f._db, clock=lambda: self.show.start_time)

@@ -1,8 +1,10 @@
 """Demo data. Show times are relative to 'now' so the demo never goes stale."""
 from datetime import datetime, timedelta
 
+from ..security import hash_password
 from ..domain.models import Admin, Customer, Movie, Screen, Seat, SeatType, Show, Theatre
 
+DEMO_PASSWORD = "demo1234"  # demo accounts only
 ROW_TYPES = {"A": SeatType.REGULAR, "B": SeatType.REGULAR, "C": SeatType.PREMIUM, "D": SeatType.RECLINER}
 
 
@@ -22,6 +24,7 @@ def seed_demo(facade, now=None):
         for i, m in enumerate(movies):
             facade.shows.add(Show(m, th.screens[i % 2], day(1, 12 + 3 * i), 250.0))
             facade.shows.add(Show(m, th.screens[(i + 1) % 2], day(2, 16 + 3 * i), 280.0))
-        facade.users.add(Customer("Asha", "asha@example.com", "9876500001", is_student=True))
-        facade.users.add(Customer("Rohan", "rohan@example.com", "9876500002"))
-        facade.users.add(Admin("Manager", "admin@orion.example"))
+        pw = hash_password(DEMO_PASSWORD)
+        facade.users.add(Customer("Asha", "asha@example.com", "9876500001", is_student=True), pw)
+        facade.users.add(Customer("Rohan", "rohan@example.com", "9876500002"), pw)
+        facade.users.add(Admin("Manager", "admin@orion.example"), pw)

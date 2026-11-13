@@ -2,7 +2,8 @@
 
 ## 1.1 Project overview
 **CineBook** is a movie-ticketing system for a multiplex. **Users:** customers (browse, book, cancel) and admins (reports). **Problem solved:** replaces manual counter booking with seat-accurate online booking that prevents double-booking, prices tickets by seat type/day/customer, takes payment, and notifies the customer. **Main features:** browse movies & shows, live seat map, multi-seat booking, UPI/Card/Wallet payment, cancellation with refund, booking history, revenue/occupancy reports.
-Stack: Python 3, SQLite (data-access layer), console UI.
+**Architecture:** three tiers – browser front end (HTML/CSS/JavaScript), Flask REST back end, SQLite database. A console UI is kept as a second, interchangeable presentation layer.
+Stack: Python 3, Flask, SQLite, vanilla JavaScript.
 
 ## 1.2 Objects grouped into classes
 | Class | State (attributes) | Behaviour (methods) |
@@ -20,7 +21,10 @@ Stack: Python 3, SQLite (data-access layer), console UI.
 | PaymentCreator / PaymentProcessor | – | create_processor(), charge() |
 | BookingEventPublisher / observers | observers list | subscribe(), notify(), update() |
 | ReportGenerator (+2) | queries | generate() |
-| BookingFacade | repositories, publisher, clock | book_tickets(), cancel_booking(), seat_map(), generate_report() |
+| BookingFacade | repositories, publisher, clock | book_tickets(), cancel_booking(), quote(), seat_map(), generate_report(), add_movie(), schedule_show() |
+| AuthService | tokens, users repository | register(), login(), user_for_token(), logout() |
+| InAppNotifier | per-user feed | update(), for_user() |
+| REST controllers (`web/api.py`) | – | one function per endpoint: HTTP/JSON ↔ facade |
 
 ## 1.3 CRC cards (6 classes)
 | **Booking** | |
@@ -54,7 +58,7 @@ Stack: Python 3, SQLite (data-access layer), console UI.
 | Collaborators | BookingObserver (Email/SMS/Audit), Booking |
 
 ### Collaboration for the use case "Book Tickets"
-1. CLI → **BookingFacade**.`book_tickets()`
+1. Browser (`app.js`) → REST controller `POST /api/bookings` → **AuthService**.`user_for_token()` → **BookingFacade**.`book_tickets()`
 2. Facade → **Repositories** to load Customer/Show and the taken seats
 3. Facade → **PricingStrategy**.`price()` for each Seat → creates **Tickets**
 4. Facade → **Booking** (PENDING) → saved
@@ -65,7 +69,7 @@ Stack: Python 3, SQLite (data-access layer), console UI.
 ## 1.4 OO concepts in the project
 | Concept | Example (file) |
 |---|---|
-| Encapsulation & information hiding | `Booking._status` is private; only `confirm/cancel/expire` can change it and they enforce the transition table (`domain/models.py`). `DatabaseManager._conn` is hidden behind `connection` / `transaction()`. `User._email` is validated and read-only. |
+| Encapsulation & information hiding | `Booking._status` is private; only `confirm/cancel/expire` can change it and they enforce the transition table (`domain/models.py`). `AuthService._tokens` and `DatabaseManager._conn` are hidden; the DB is reached only through `connection` / `transaction()`. `User._email` is validated and read-only. |
 | Class hierarchy | `User → Customer, Admin`; `PricingStrategy → Standard/Weekend/StudentDiscount`; `PaymentProcessor → UPI/Card/Wallet`; `ReportGenerator → Revenue/Occupancy` |
-| Polymorphism | `strategy.price()`, `processor.charge()`, `observer.update()`, `user.role()` are called through the base type and resolved at run time |
+| Polymorphism | `strategy.price()`, `processor.charge()`, `observer.update()` (Email/SMS/Audit/InApp), `user.role()` are called through the base type and resolved at run time |
 | Aggregation / containment | Aggregation: `Movie` ◇— `Show` (movie outlives its shows). Composition: `Booking` ◆— `Ticket`, `Screen` ◆— `Seat`, `Theatre` ◆— `Screen` |

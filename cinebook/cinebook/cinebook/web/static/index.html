@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CineBook – Movie Tickets</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🎬 CineBook</h1>
+    <nav id="nav" hidden>
+      <button data-view="movies">Movies</button>
+      <button data-view="bookings" data-role="CUSTOMER">My bookings</button>
+      <button data-view="notifications" data-role="CUSTOMER">Notifications</button>
+      <button data-view="admin" data-role="ADMIN">Admin</button>
+    </nav>
+    <div id="userchip" hidden><span id="username"></span> <button id="signout" class="ghost">Sign out</button></div>
+  </header>
+
+  <main>
+    <!-- Sign in / register -->
+    <section id="view-auth" class="view narrow">
+      <div class="card">
+        <div class="tabs"><button class="tab active" data-auth="login">Sign in</button><button class="tab" data-auth="register">Register</button></div>
+        <form id="form-login" class="form">
+          <label>Email<input name="email" type="email" required autocomplete="username"></label>
+          <label>Password<input name="password" type="password" required autocomplete="current-password"></label>
+          <button class="primary">Sign in</button>
+          <p class="hint">Demo accounts (password <b>demo1234</b>):
+            <a href="#" data-fill="asha@example.com">asha@example.com</a> (student),
+            <a href="#" data-fill="rohan@example.com">rohan@example.com</a>,
+            <a href="#" data-fill="admin@orion.example">admin@orion.example</a> (admin)</p>
+        </form>
+        <form id="form-register" class="form" hidden>
+          <label>Name<input name="name" required></label>
+          <label>Email<input name="email" type="email" required autocomplete="username"></label>
+          <label>Password (min 8 characters)<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+          <label>Phone (optional)<input name="phone" inputmode="tel"></label>
+          <label class="check"><input name="is_student" type="checkbox"> I am a student (15% discount)</label>
+          <button class="primary">Create account</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Movies and shows -->
+    <section id="view-movies" class="view" hidden>
+      <h2>Now showing</h2>
+      <div id="movies" class="grid"></div>
+      <div id="shows-panel" class="card" hidden></div>
+    </section>
+
+    <!-- Seat selection and payment -->
+    <section id="view-booking" class="view" hidden>
+      <button class="ghost" id="back-to-movies">← Back to movies</button>
+      <div class="card">
+        <h2 id="booking-title"></h2>
+        <p id="booking-sub" class="muted"></p>
+        <div class="screen-bar">SCREEN</div>
+        <div id="seatgrid"></div>
+        <div class="legend">
+          <span><i class="seat regular"></i>Regular</span><span><i class="seat premium"></i>Premium</span>
+          <span><i class="seat recliner"></i>Recliner</span><span><i class="seat taken"></i>Taken</span>
+          <span><i class="seat selected"></i>Selected</span>
+        </div>
+      </div>
+      <div class="card" id="checkout">
+        <h3>Your selection</h3>
+        <div id="quote" class="muted">Pick up to 10 seats.</div>
+        <div id="pay-form" hidden>
+          <label>Payment method
+            <select id="method"><option value="UPI">UPI</option><option value="CARD">Card</option><option value="WALLET">Wallet (simulated)</option></select>
+          </label>
+          <div id="pay-fields"></div>
+          <button id="pay" class="primary">Pay &amp; book</button>
+          <p class="hint">Payments are simulated; card details are validated but never stored.</p>
+        </div>
+      </div>
+      <div class="card ok" id="confirmation" hidden></div>
+    </section>
+
+    <!-- My bookings -->
+    <section id="view-bookings" class="view" hidden>
+      <h2>My bookings</h2><div id="bookings"></div>
+    </section>
+
+    <!-- Notifications -->
+    <section id="view-notifications" class="view" hidden>
+      <h2>Notifications</h2><div id="notifications"></div>
+    </section>
+
+    <!-- Admin -->
+    <section id="view-admin" class="view" hidden>
+      <h2>Admin</h2>
+      <div class="card">
+        <h3>Reports</h3>
+        <button class="primary" data-report="revenue">Revenue by movie</button>
+        <button class="primary" data-report="occupancy">Occupancy by show</button>
+        <pre id="report-out" hidden></pre>
+      </div>
+      <div class="two">
+        <form class="card form" id="form-movie">
+          <h3>Add movie</h3>
+          <label>Title<input name="title" required></label>
+          <label>Duration (minutes)<input name="duration_min" type="number" min="1" required></label>
+          <label>Genre<input name="genre" required></label>
+          <label>Language<input name="language" required></label>
+          <label>Rating<input name="rating" placeholder="UA"></label>
+          <button class="primary">Add movie</button>
+        </form>
+        <form class="card form" id="form-show">
+          <h3>Schedule show</h3>
+          <label>Movie<select name="movie_id" id="show-movie" required></select></label>
+          <label>Screen<select name="screen_id" id="show-screen" required></select></label>
+          <label>Start time<input name="start_time" type="datetime-local" required></label>
+          <label>Base price (Rs.)<input name="base_price" type="number" min="1" step="0.5" required></label>
+          <button class="primary">Schedule show</button>
+          <p class="hint">Shows on one screen need a 15-minute gap.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+  <div id="toasts"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 """PATTERN (Behavioral): Observer - booking events fan out to notifiers without coupling the facade to them."""
 import logging
+from collections import defaultdict
+from datetime import datetime
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -47,3 +49,16 @@ class AuditLogger(BookingObserver):
     def __init__(self): self.entries: list[str] = []
     def update(self, event, booking):
         self.entries.append(f"booking={booking.id} event={event.value} total={booking.total_amount}")
+
+
+class InAppNotifier(BookingObserver):
+    """Keeps a per-customer notification feed that the web UI polls (in memory)."""
+    def __init__(self): self._feed = defaultdict(list)
+
+    def update(self, event, booking):
+        self._feed[booking.customer.id].append({
+            "event": event.value, "booking_id": booking.id, "at": datetime.now().isoformat(timespec="seconds"),
+            "message": f"Booking #{booking.id} {event.value.lower()}: {booking.show.movie.title}"})
+
+    def for_user(self, user_id: int) -> list[dict]:
+        return list(reversed(self._feed[user_id]))

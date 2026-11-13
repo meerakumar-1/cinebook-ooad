@@ -59,6 +59,12 @@ class TheatreRepository:
             "SELECT * FROM seats WHERE screen_id=? ORDER BY row_label, number", (screen_id,))]
         return Screen(r["name"], seats, r["id"], r["theatre_id"])
 
+    def list_screens(self):
+        rows = self._db.connection.execute(
+            "SELECT s.id AS id, t.name AS theatre FROM screens s JOIN theatres t ON t.id=s.theatre_id "
+            "ORDER BY t.name, s.name").fetchall()
+        return [(self.get_screen(r["id"]), r["theatre"]) for r in rows]
+
     def get_seat(self, seat_id: int) -> Seat:
         r = self._db.connection.execute("SELECT * FROM seats WHERE id=?", (seat_id,)).fetchone()
         return self._to_seat(_one(r, f"Seat {seat_id}"))
@@ -82,6 +88,10 @@ class ShowRepository:
         r = self._db.connection.execute("SELECT * FROM shows WHERE id=?", (show_id,)).fetchone()
         return self._hydrate(_one(r, f"Show {show_id}"))
 
+    def by_screen(self, screen_id: int) -> list[Show]:
+        rows = self._db.connection.execute("SELECT * FROM shows WHERE screen_id=? ORDER BY start_time", (screen_id,))
+        return [self._hydrate(r) for r in rows]
+
     def by_movie(self, movie_id: int) -> list[Show]:
         rows = self._db.connection.execute("SELECT * FROM shows WHERE movie_id=? ORDER BY start_time", (movie_id,))
         return [self._hydrate(r) for r in rows]
@@ -90,17 +100,28 @@ class ShowRepository:
 class UserRepository:
     def __init__(self, db): self._db = db
 
-    def add(self, u):
+    def add(self, u, password_hash: str = ""):
         u.id = self._db.connection.execute(
-            "INSERT INTO users(name,email,phone,role,is_student) VALUES(?,?,?,?,?)",
-            (u.name, u.email, getattr(u, "phone", ""), u.role(), int(getattr(u, "is_student", False)))).lastrowid
+            "INSERT INTO users(name,email,phone,role,is_student,password_hash) VALUES(?,?,?,?,?,?)",
+            (u.name, u.email, getattr(u, "phone", ""), u.role(), int(getattr(u, "is_student", False)),
+             password_hash)).lastrowid
         return u
 
-    def get(self, user_id: int):
-        r = _one(self._db.connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone(), f"User {user_id}")
+    @staticmethod
+    def _hydrate(r):
         if r["role"] == "ADMIN":
             return Admin(r["name"], r["email"], r["id"])
         return Customer(r["name"], r["email"], r["phone"], bool(r["is_student"]), r["id"])
+
+    def get(self, user_id: int):
+        r = _one(self._db.connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone(), f"User {user_id}")
+        return self._hydrate(r)
+
+    def credentials_for(self, email: str):
+        """Return (user, password_hash) for an email, or raise NotFoundError."""
+        r = _one(self._db.connection.execute("SELECT * FROM users WHERE email=?", (email.strip().lower(),)).fetchone(),
+                 "User")
+        return self._hydrate(r), r["password_hash"]
 
 
 class BookingRepository:

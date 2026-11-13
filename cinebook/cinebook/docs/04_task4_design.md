@@ -16,6 +16,7 @@
 | Class | Coupling | Cohesion |
 |---|---|---|
 | `CinemaSystem` (before) | Very high: pricing, payment, notification, reporting all inside | Low (coincidental) |
+| `web/api.py` controllers | Low: each function only translates HTTP ↔ facade calls | High: one endpoint, one job |
 | `BookingFacade` | Medium by design: depends on abstractions (strategy, creator, publisher) and repositories | High (functional): all methods are use-case orchestration |
 | `Booking` | Low: depends only on Customer/Show/Ticket | High: everything concerns booking state and totals |
 | `*Repository` | Low: depend on the DB singleton + domain | High: persistence of one aggregate each |
@@ -29,6 +30,7 @@
 | User | +id, +name, +email (read-only), +role() | −_email |
 | DatabaseManager | +get_instance(), +connection, +transaction() | −_conn, −_instance |
 | ReportGenerator | +generate() | #title(), #fetch_rows(), #format_row(), #summarise() (hooks for subclasses) |
+| AuthService | +register(), +login(), +user_for_token(), +logout() | −_tokens, −_issue_token() |
 | BookingEventPublisher | +subscribe(), +unsubscribe(), +notify() | −_observers |
 | BookingFacade | +list_movies(), +seat_map(), +book_tickets(), +cancel_booking(), +generate_report() | −_db, −_clock, repositories |
 

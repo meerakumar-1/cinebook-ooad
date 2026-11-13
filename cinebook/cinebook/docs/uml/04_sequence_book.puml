@@ -1,13 +1,18 @@
 @startuml sequence_book
 actor Customer
-participant CLI
+participant "Browser\n(app.js)" as UI
+participant "API controller\n(api.py)" as API
+participant AuthService as Auth
 participant BookingFacade as F
 participant BookingRepository as BR
 participant PricingStrategy as PS
 participant PaymentCreator as PC
 participant BookingEventPublisher as Pub
-Customer -> CLI : choose show, seats, payment
-CLI -> F : book_tickets(cid, show, seats, method, details)
+Customer -> UI : select seats, choose payment, click Pay
+UI -> API : POST /api/bookings (Bearer token)
+API -> Auth : user_for_token(token)
+Auth --> API : Customer
+API -> F : book_tickets(cid, show, seats, method, details)
 F -> BR : booked_seat_ids(show)
 BR --> F : taken ids
 F -> PS : price(show, seat) per seat
@@ -19,9 +24,11 @@ PC --> F : PaymentResult
 alt payment success
   F -> BR : add_payment(SUCCESS), update_status(CONFIRMED)
   F -> Pub : notify(CONFIRMED, booking)
-  F --> CLI : Booking
+  F --> API : Booking
+  API --> UI : 201 + booking JSON
 else payment failed
   F -> BR : add_payment(FAILED), update_status(CANCELLED)
-  F --> CLI : PaymentFailedError
+  F --> API : PaymentFailedError
+  API --> UI : 402 + error JSON
 end
 @enduml

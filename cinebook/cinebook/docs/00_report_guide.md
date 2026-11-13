@@ -13,5 +13,6 @@ Required order: **title page → project overview → Task 1 → Task 2 → Task
 | Conclusion | What improved: removed god class and the cancel-all bug, new payment method / pricing rule / notifier / report = new class and no edit to booking code; 14 automated tests; state machine enforces valid transitions |
 | References | Bahrami (OO Systems Development Using UML) chapters 1–10; Gamma et al., *Design Patterns* |
 
-Include screenshots of `python main.py demo` and `python -m unittest` output.
+Include screenshots from `docs/screenshots/` (login, shows, seat selection with student pricing, booking confirmed, my bookings, admin), plus the output of `python -m unittest discover -s tests -v` (28 tests covering domain, patterns and the REST API).
+For Task 5 also include `10_architecture_tiers.png` to show front end / back end / database.
 Be ready in the viva/demo to explain every class and each pattern's "why", and to add a small change live (e.g. a new `FestivalPricing` strategy or a new payment method).

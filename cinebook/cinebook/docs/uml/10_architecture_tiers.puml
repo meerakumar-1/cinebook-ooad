@@ -1,0 +1,17 @@
+@startuml architecture_tiers
+node "Browser (front end)" {
+  [HTML + CSS + JavaScript\n(single-page UI)] as spa
+}
+node "Python process (back end)" {
+  [Flask REST API\n(controllers)] as flask
+  [Service layer\nFacade + AuthService] as svc
+  [Domain + patterns] as dom
+  [Repositories +\nDatabaseManager] as dal
+}
+database "SQLite file\ncinebook.db" as db
+spa --> flask : HTTP/JSON\nBearer token
+flask --> svc
+svc --> dom
+svc --> dal
+dal --> db : SQL
+@enduml
