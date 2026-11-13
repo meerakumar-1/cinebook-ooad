@@ -1,0 +1,27 @@
+@startuml sequence_book
+actor Customer
+participant CLI
+participant BookingFacade as F
+participant BookingRepository as BR
+participant PricingStrategy as PS
+participant PaymentCreator as PC
+participant BookingEventPublisher as Pub
+Customer -> CLI : choose show, seats, payment
+CLI -> F : book_tickets(cid, show, seats, method, details)
+F -> BR : booked_seat_ids(show)
+BR --> F : taken ids
+F -> PS : price(show, seat) per seat
+PS --> F : price
+F -> BR : add(Booking[PENDING])
+F -> PC : process(amount, details)
+PC -> PC : create_processor().charge()
+PC --> F : PaymentResult
+alt payment success
+  F -> BR : add_payment(SUCCESS), update_status(CONFIRMED)
+  F -> Pub : notify(CONFIRMED, booking)
+  F --> CLI : Booking
+else payment failed
+  F -> BR : add_payment(FAILED), update_status(CANCELLED)
+  F --> CLI : PaymentFailedError
+end
+@enduml

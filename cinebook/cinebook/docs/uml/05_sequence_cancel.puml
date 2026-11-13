@@ -1,0 +1,20 @@
+@startuml sequence_cancel
+actor Customer
+participant CLI
+participant BookingFacade as F
+participant BookingRepository as BR
+participant Booking as B
+participant BookingEventPublisher as Pub
+Customer -> CLI : cancel booking #id
+CLI -> F : cancel_booking(id)
+F -> BR : get(id)
+BR --> F : Booking
+F -> F : check show not started
+F -> BR : payment_for(id)
+F -> B : cancel()
+B --> F : status = CANCELLED (or InvalidStateTransition)
+F -> BR : update_status(booking)
+F -> BR : set_payment_status(id, REFUNDED)
+F -> Pub : notify(CANCELLED, booking)
+F --> CLI : Booking
+@enduml

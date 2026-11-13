@@ -1,0 +1,34 @@
+@startuml package_layers
+skinparam packageStyle rectangle
+package "Presentation" {
+  component "cli.py / main.py" as cli
+}
+package "Service (Facade)" {
+  component "BookingFacade" as facade
+}
+package "Patterns / business rules" {
+  component "pricing (Strategy)" as pricing
+  component "payments (Factory Method)" as payments
+  component "observers (Observer)" as observers
+  component "reports (Template Method)" as reports
+}
+package "Domain" {
+  component "models.py" as models
+}
+package "Data access" {
+  component "repositories.py" as repos
+  component "DatabaseManager (Singleton)" as dbm
+}
+database "SQLite" as DB
+cli --> facade
+facade --> pricing
+facade --> payments
+facade --> observers
+facade --> reports
+facade --> repos
+facade --> models
+repos --> models
+repos --> dbm
+dbm --> DB
+note bottom of DB : Dependencies point downward only;\nDomain depends on nothing but errors.py.
+@enduml

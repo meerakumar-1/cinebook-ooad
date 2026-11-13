@@ -1,0 +1,151 @@
+@startuml singleton_before
+class Repository {
+  -conn
+}
+note right: every repo opened its own sqlite3.connect()\n(duplicate connections, inconsistent state)
+@enduml
+
+@startuml singleton_after
+class DatabaseManager {
+  -{static} _instance
+  +{static} get_instance(path)
+  +connection
+  +transaction()
+}
+Repository --> DatabaseManager : uses single instance
+@enduml
+
+@startuml factory_before
+class CinemaSystem {
+  +book(..., method, info)
+  if method=="upi" ... elif "card" ...
+}
+@enduml
+
+@startuml factory_after
+abstract class PaymentCreator {
+  +{abstract} create_processor(): PaymentProcessor
+  +process(amount, details)
+}
+class UPICreator
+class CardCreator
+class WalletCreator
+abstract class PaymentProcessor {
+  +{abstract} charge(amount, details): PaymentResult
+}
+class UPIProcessor
+class CardProcessor
+class WalletProcessor
+PaymentCreator <|-- UPICreator
+PaymentCreator <|-- CardCreator
+PaymentCreator <|-- WalletCreator
+PaymentProcessor <|-- UPIProcessor
+PaymentProcessor <|-- CardProcessor
+PaymentProcessor <|-- WalletProcessor
+UPICreator ..> UPIProcessor : creates
+CardCreator ..> CardProcessor : creates
+WalletCreator ..> WalletProcessor : creates
+PaymentCreator ..> PaymentProcessor
+@enduml
+
+@startuml facade_before
+class CLI
+class MovieRepo
+class ShowRepo
+class BookingRepo
+class PricingLogic
+class PaymentLogic
+CLI --> MovieRepo
+CLI --> ShowRepo
+CLI --> BookingRepo
+CLI --> PricingLogic
+CLI --> PaymentLogic
+@enduml
+
+@startuml facade_after
+class CLI
+class BookingFacade {
+  +book_tickets()
+  +cancel_booking()
+  +seat_map()
+  +generate_report()
+}
+class Repositories
+class PricingStrategy
+class PaymentCreator
+class BookingEventPublisher
+CLI --> BookingFacade
+BookingFacade --> Repositories
+BookingFacade --> PricingStrategy
+BookingFacade --> PaymentCreator
+BookingFacade --> BookingEventPublisher
+@enduml
+
+@startuml strategy_before
+class CinemaSystem {
+  +book()
+  price *= 1.5 if row C ...
+  price *= 0.85 if student ...
+  price *= 1.2 if weekend ...
+}
+@enduml
+
+@startuml strategy_after
+interface PricingStrategy {
+  +price(show, seat): float
+}
+class StandardPricing
+class WeekendPricing
+class StudentDiscountPricing
+PricingStrategy <|.. StandardPricing
+PricingStrategy <|.. WeekendPricing
+PricingStrategy <|.. StudentDiscountPricing
+BookingFacade ..> PricingStrategy : select_pricing(show, customer)
+@enduml
+
+@startuml observer_before
+class CinemaSystem {
+  +book()
+  print("EMAIL sent")
+}
+@enduml
+
+@startuml observer_after
+class BookingEventPublisher {
+  +subscribe(o)
+  +unsubscribe(o)
+  +notify(event, booking)
+}
+interface BookingObserver {
+  +update(event, booking)
+}
+class EmailNotifier
+class SMSNotifier
+class AuditLogger
+BookingEventPublisher o-- "0..*" BookingObserver
+BookingObserver <|.. EmailNotifier
+BookingObserver <|.. SMSNotifier
+BookingObserver <|.. AuditLogger
+BookingFacade --> BookingEventPublisher : notify()
+@enduml
+
+@startuml template_before
+class CinemaSystem {
+  +revenue_report()
+}
+note right: one ad-hoc report; adding an occupancy report\nmeans copy-pasting the fetch/format/summary steps
+@enduml
+
+@startuml template_after
+abstract class ReportGenerator <<template method>> {
+  +generate()
+  #{abstract} title()
+  #{abstract} fetch_rows()
+  #{abstract} format_row(row)
+  #{abstract} summarise(rows)
+}
+class RevenueReport
+class OccupancyReport
+ReportGenerator <|-- RevenueReport
+ReportGenerator <|-- OccupancyReport
+@enduml
