@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0e17">
+  <title>CineBook – Book movie tickets</title>
+  <script src="/static/theme.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" id="brand" aria-label="CineBook home"><span class="logo">🎬</span><span>Cine<b>Book</b></span></button>
+    <nav id="nav" hidden aria-label="Main">
+      <button data-view="movies">Movies</button>
+      <button data-view="bookings" data-role="CUSTOMER">My bookings</button>
+      <button data-view="notifications" data-role="CUSTOMER">Notifications</button>
+      <button data-view="admin" data-role="ADMIN">Dashboard</button>
+    </nav>
+    <div class="right">
+      <button id="theme" class="icon" aria-label="Toggle light/dark theme" title="Toggle theme">🌓</button>
+      <div id="userchip" hidden><span class="avatar" id="avatar" aria-hidden="true"></span><span id="username"></span><button id="signout" class="ghost sm">Sign out</button></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ Sign in / register ============ -->
+    <section id="view-auth" class="view auth">
+      <div class="auth-hero">
+        <h2>Your seat. Your show.<br><span class="grad">Zero queues.</span></h2>
+        <p>Pick a movie, choose your exact seats, pay and get your tickets in under a minute.</p>
+        <ul class="feats">
+          <li>🎟️ Live seat map – no double bookings</li>
+          <li>⏱️ Seats held for 5 minutes while you pay</li>
+          <li>🎓 Automatic student discount</li>
+        </ul>
+      </div>
+      <div class="card auth-card">
+        <div class="tabs" role="tablist"><button class="tab active" data-auth="login" role="tab">Sign in</button><button class="tab" data-auth="register" role="tab">Register</button></div>
+        <form id="form-login" class="form">
+          <label>Email<input name="email" type="email" required autocomplete="username"></label>
+          <label>Password<input name="password" type="password" required autocomplete="current-password"></label>
+          <button class="primary block">Sign in</button>
+          <p class="hint">Demo accounts, password <b>demo1234</b>:<br>
+            <a href="#" data-fill="asha@example.com">asha@example.com</a> (student) ·
+            <a href="#" data-fill="rohan@example.com">rohan@example.com</a> ·
+            <a href="#" data-fill="admin@orion.example">admin@orion.example</a> (admin)</p>
+        </form>
+        <form id="form-register" class="form" hidden>
+          <label>Name<input name="name" required maxlength="80"></label>
+          <label>Email<input name="email" type="email" required autocomplete="username"></label>
+          <label>Password (min 8 characters)<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+          <label>Phone (optional)<input name="phone" inputmode="tel" maxlength="20"></label>
+          <label class="check"><input name="is_student" type="checkbox"> I'm a student (15% off every ticket)</label>
+          <button class="primary block">Create account</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ Movies ============ -->
+    <section id="view-movies" class="view" hidden>
+      <div id="hero" class="hero" hidden></div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search movies or genres…" aria-label="Search movies">
+        <select id="lang" aria-label="Filter by language"><option value="">All languages</option></select>
+      </div>
+      <div id="genres" class="chips" role="group" aria-label="Genres"></div>
+      <div id="movies" class="grid"></div>
+    </section>
+
+    <!-- ============ Seat selection ============ -->
+    <section id="view-seats" class="view" hidden>
+      <div class="crumbs"><button class="ghost sm" id="back-movies">← Movies</button><ol class="stepper" id="stepper-seats"></ol></div>
+      <div class="seat-layout">
+        <div class="card">
+          <h2 id="seat-title"></h2><p id="seat-sub" class="muted"></p>
+          <div class="screen-wrap"><div class="screen-curve"></div><span>SCREEN</span></div>
+          <div id="seatgrid" class="seatgrid"></div>
+          <div id="legend" class="legend"></div>
+        </div>
+        <aside class="card summary">
+          <h3>Your seats</h3>
+          <div id="quote" class="muted">Select up to 10 seats.</div>
+          <button class="primary block" id="to-checkout" disabled>Continue to payment</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ Checkout ============ -->
+    <section id="view-checkout" class="view" hidden>
+      <div class="crumbs"><button class="ghost sm" id="back-seats">← Change seats</button><ol class="stepper" id="stepper-checkout"></ol></div>
+      <div class="seat-layout">
+        <div class="card">
+          <div class="pay-head"><h2>Payment</h2><span id="countdown" class="countdown" role="timer" aria-live="off"></span></div>
+          <div class="method-tabs" role="tablist" aria-label="Payment method">
+            <button data-method="UPI" class="active" role="tab">UPI</button>
+            <button data-method="CARD" role="tab">Card</button>
+            <button data-method="WALLET" role="tab">Wallet</button>
+          </div>
+          <div id="pay-fields" class="form"></div>
+          <button class="primary block" id="pay">Pay</button>
+          <p class="hint">Payments are simulated. Card details are validated but never stored.</p>
+          <div id="expired-box" class="notice" hidden>Your seat hold expired. <button class="primary sm" id="reselect">Select seats again</button></div>
+        </div>
+        <aside class="card summary" id="order"></aside>
+      </div>
+    </section>
+
+    <!-- ============ Confirmation ============ -->
+    <section id="view-done" class="view" hidden>
+      <div class="crumbs"><ol class="stepper" id="stepper-done"></ol></div>
+      <div class="done-head"><span class="tick">✓</span><div><h2>Booking confirmed</h2><p id="done-sub" class="muted"></p></div></div>
+      <div id="tickets" class="tickets"></div>
+      <div class="actions"><button class="primary" id="print">Print tickets</button><button class="ghost" id="done-bookings">My bookings</button><button class="ghost" id="done-movies">Book another</button></div>
+    </section>
+
+    <!-- ============ My bookings ============ -->
+    <section id="view-bookings" class="view" hidden>
+      <h2>My bookings</h2><div id="bookings" class="stack"></div>
+    </section>
+
+    <!-- ============ Notifications ============ -->
+    <section id="view-notifications" class="view" hidden>
+      <h2>Notifications</h2><div id="notifications" class="stack"></div>
+    </section>
+
+    <!-- ============ Admin dashboard ============ -->
+    <section id="view-admin" class="view" hidden>
+      <h2>Dashboard</h2>
+      <div id="stats" class="stats"></div>
+      <div class="two">
+        <div class="card"><h3>Revenue by movie</h3><div id="chart"></div></div>
+        <div class="card"><h3>Bookings by status</h3><div id="status-chips" class="chips"></div>
+          <h3 class="spaced">Reports</h3>
+          <button class="primary sm" data-report="revenue">Revenue report</button>
+          <button class="primary sm" data-report="occupancy">Occupancy report</button>
+        </div>
+      </div>
+      <div class="card"><h3>Recent bookings</h3><div class="table-wrap"><table id="admin-bookings"></table></div></div>
+      <div class="two">
+        <form class="card form" id="form-movie">
+          <h3>Add movie</h3>
+          <label>Title<input name="title" required maxlength="120"></label>
+          <div class="row2"><label>Duration (min)<input name="duration_min" type="number" min="1" required></label><label>Rating<input name="rating" placeholder="UA" maxlength="8"></label></div>
+          <div class="row2"><label>Genre<input name="genre" required maxlength="40"></label><label>Language<input name="language" required maxlength="40"></label></div>
+          <label>Synopsis<textarea name="synopsis" rows="3" maxlength="600"></textarea></label>
+          <button class="primary">Add movie</button>
+        </form>
+        <form class="card form" id="form-show">
+          <h3>Schedule show</h3>
+          <label>Movie<select name="movie_id" id="show-movie" required></select></label>
+          <label>Screen<select name="screen_id" id="show-screen" required></select></label>
+          <div class="row2"><label>Start time<input name="start_time" type="datetime-local" required></label><label>Base price (Rs.)<input name="base_price" type="number" min="1" step="0.5" required></label></div>
+          <button class="primary">Schedule show</button>
+          <p class="hint">Shows on the same screen need a 15-minute gap.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="movie-dialog" aria-labelledby="md-title">
+    <div class="dlg-head"><div id="md-poster"></div><div><h2 id="md-title"></h2><div id="md-meta" class="muted"></div><p id="md-synopsis"></p></div><button class="icon" data-close aria-label="Close">✕</button></div>
+    <div id="md-shows"></div>
+  </dialog>
+  <dialog id="report-dialog"><div class="dlg-head"><h3 id="rd-title">Report</h3><button class="icon" data-close aria-label="Close">✕</button></div><pre id="rd-text"></pre></dialog>
+  <dialog id="confirm-dialog"><h3 id="cf-title"></h3><p id="cf-text" class="muted"></p><div class="actions"><button class="ghost" data-result="no">Keep it</button><button class="danger" data-result="yes" id="cf-yes">Yes, cancel</button></div></dialog>
+  <div id="toasts" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

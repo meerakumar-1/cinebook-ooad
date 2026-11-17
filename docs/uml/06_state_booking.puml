@@ -1,0 +1,10 @@
+@startuml state_booking
+[*] --> PENDING : hold_seats()\nexpires_at = now + 5 min
+PENDING --> PENDING : pay_booking() fails\n(attempt recorded, retry allowed)
+PENDING --> CONFIRMED : pay_booking() succeeds / confirm()
+PENDING --> CANCELLED : release_hold(), replaced by a new hold,\nor cancel_booking() / cancel()
+PENDING --> EXPIRED : deadline passed\n(next request sweeps stale holds) / expire()
+CONFIRMED --> CANCELLED : cancel_booking() before show / cancel() + refund
+CANCELLED --> [*]
+EXPIRED --> [*]
+@enduml

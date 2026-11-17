@@ -1,0 +1,25 @@
+@startuml activity_booking
+start
+:Customer selects movie and show;
+:View live seat map;
+:Select seats;
+if (all seats free?) then (yes)
+  :Quote price (pricing strategy);
+  :Hold seats for 5 minutes (booking PENDING);
+  repeat
+    :Choose payment method and pay;
+    if (payment ok?) then (yes)
+      :Confirm booking, issue tickets;
+      :Notify customer;
+      stop
+    else (no)
+      :Record failed attempt, show error;
+    endif
+  repeat while (hold still valid?) is (yes)
+  ->no;
+  :Booking EXPIRED, seats released;
+else (no)
+  :Show "seat taken";
+endif
+stop
+@enduml

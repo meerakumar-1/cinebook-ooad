@@ -1,0 +1,40 @@
+CREATE TABLE IF NOT EXISTS movies(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL,
+  duration_min INTEGER NOT NULL CHECK(duration_min > 0),
+  genre TEXT, language TEXT, rating TEXT, synopsis TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS theatres(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, city TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS screens(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, theatre_id INTEGER NOT NULL REFERENCES theatres(id), name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS seats(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, screen_id INTEGER NOT NULL REFERENCES screens(id),
+  row_label TEXT NOT NULL, number INTEGER NOT NULL, seat_type TEXT NOT NULL,
+  UNIQUE(screen_id, row_label, number));
+CREATE TABLE IF NOT EXISTS shows(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, movie_id INTEGER NOT NULL REFERENCES movies(id),
+  screen_id INTEGER NOT NULL REFERENCES screens(id), start_time TEXT NOT NULL, base_price REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS users(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE,
+  phone TEXT, role TEXT NOT NULL, is_student INTEGER NOT NULL DEFAULT 0,
+  password_hash TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS bookings(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id),
+  show_id INTEGER NOT NULL REFERENCES shows(id), status TEXT NOT NULL, created_at TEXT NOT NULL,
+  expires_at TEXT);
+CREATE TABLE IF NOT EXISTS tickets(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, booking_id INTEGER NOT NULL REFERENCES bookings(id),
+  seat_id INTEGER NOT NULL REFERENCES seats(id), price REAL NOT NULL, code TEXT NOT NULL UNIQUE);
+CREATE TABLE IF NOT EXISTS payments(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, booking_id INTEGER NOT NULL REFERENCES bookings(id),
+  method TEXT NOT NULL, amount REAL NOT NULL, status TEXT NOT NULL, txn_ref TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS notifications(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id),
+  booking_id INTEGER, event TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS sessions(
+  token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), expires_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_shows_movie ON shows(movie_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_bookings_show ON bookings(show_id, status);
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_booking ON tickets(booking_id);
+CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, id);

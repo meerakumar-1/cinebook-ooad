@@ -1,0 +1,23 @@
+@startuml sequence_cancel
+actor Customer
+participant "Browser\n(app.js)" as UI
+participant "API controller\n(api.py)" as API
+participant BookingFacade as F
+participant BookingRepository as BR
+participant Booking as B
+participant BookingEventPublisher as Pub
+Customer -> UI : click Cancel
+UI -> API : POST /api/bookings/{id}/cancel
+API -> F : cancel_booking(id, requester_id)
+F -> BR : get(id)
+BR --> F : Booking
+F -> F : owner or admin? show not started?
+F -> BR : payment_for(id)
+F -> B : cancel()
+B --> F : CANCELLED (or InvalidStateTransition)
+F -> BR : update_status(booking)
+F -> BR : set_payment_status(id, REFUNDED)
+F -> Pub : notify(CANCELLED, booking)
+F --> API : Booking
+API --> UI : 200 + booking JSON
+@enduml

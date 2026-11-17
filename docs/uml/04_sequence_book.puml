@@ -1,0 +1,42 @@
+@startuml sequence_book
+actor Customer
+participant "Browser\n(app.js)" as UI
+participant "API controller\n(api.py)" as API
+participant AuthService as Auth
+participant BookingFacade as F
+participant BookingRepository as BR
+participant PricingStrategy as PS
+participant PaymentCreator as PC
+participant BookingEventPublisher as Pub
+== Phase 1: hold the seats ==
+Customer -> UI : select seats, click Continue
+UI -> API : POST /api/shows/{id}/hold (Bearer token)
+API -> Auth : user_for_token(token)
+Auth --> API : Customer
+API -> F : hold_seats(cid, show, seats)
+F -> BR : expire stale holds, booked_seat_ids(show)
+F -> PS : price(show, seat) per seat
+F -> BR : add(Booking[PENDING, expires_at = now + 5 min])
+F --> API : Booking
+API --> UI : 201 + booking + seconds_left
+== Phase 2: pay before the hold expires ==
+Customer -> UI : choose method, click Pay
+UI -> API : POST /api/bookings/{id}/pay
+API -> F : pay_booking(id, cid, method, details)
+F -> PC : process(amount, details)
+PC -> PC : create_processor().charge()
+PC --> F : PaymentResult
+alt payment success
+  F -> BR : add_payment(SUCCESS), update_status(CONFIRMED)
+  F -> Pub : notify(CONFIRMED, booking)
+  F --> API : Booking
+  API --> UI : 200 + tickets
+else payment failed
+  F -> BR : add_payment(FAILED)
+  F --> API : PaymentFailedError (booking stays PENDING)
+  API --> UI : 402 (customer can retry until the hold expires)
+else hold already expired
+  F --> API : HoldExpiredError
+  API --> UI : 410
+end
+@enduml

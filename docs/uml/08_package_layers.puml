@@ -1,0 +1,41 @@
+@startuml package_layers
+skinparam packageStyle rectangle
+package "Presentation" {
+  component "Browser UI\n(static/index.html, app.js)" as ui
+  component "REST controllers\n(web/api.py, serializers.py)" as api
+  component "Console UI\n(presentation/cli.py)" as cli
+}
+package "Service" {
+  component "BookingFacade" as facade
+  component "AuthService" as auth
+}
+package "Patterns / business rules" {
+  component "pricing (Strategy)" as pricing
+  component "payments (Factory Method)" as payments
+  component "observers (Observer)" as observers
+  component "reports (Template Method)" as reports
+}
+package "Domain" {
+  component "models.py" as models
+}
+package "Data access" {
+  component "repositories.py" as repos
+  component "DatabaseManager (Singleton)" as dbm
+}
+database "SQLite" as DB
+ui ..> api : HTTP / JSON
+api --> facade
+api --> auth
+cli --> facade
+facade --> pricing
+facade --> payments
+facade --> observers
+facade --> reports
+facade --> repos
+facade --> models
+auth --> repos
+repos --> models
+repos --> dbm
+dbm --> DB
+note bottom of DB : Dependencies point downward only.\nThe console UI and the web UI are two\ninterchangeable views over the same facade.
+@enduml
