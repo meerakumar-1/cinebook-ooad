@@ -1,9 +1,0 @@
-@startuml state_booking
-[*] --> PENDING : seats held
-PENDING --> CONFIRMED : payment success / confirm()
-PENDING --> CANCELLED : payment failed or user cancels / cancel()
-PENDING --> EXPIRED : hold timeout / expire()
-CONFIRMED --> CANCELLED : user cancels before show / cancel() + refund
-CANCELLED --> [*]
-EXPIRED --> [*]
-@enduml
